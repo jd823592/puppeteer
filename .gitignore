@@ -1,0 +1,9 @@
+**
+!.gitignore
+!LICENSE
+!README.md
+!puppeteer.cabal
+!Setup.hs
+!src/
+!src/**/
+!src/**.hs
