@@ -1,0 +1,33 @@
+@import url('https://www.haskell.org/static/css/hscolour.css');
+
+body {
+    padding:0;
+    margin:0;
+    font:14px monospace;
+}
+#prompt {
+    height:28px;
+    width:32px;
+    float:left;
+    background:2px/24px url('https://www.haskell.org/static/img/logo.png') no-repeat;
+}
+#line, #type {
+    height:14px;
+    padding:7px;
+}
+#line {
+    width:100%;
+    background:-webkit-gradient(linear,left top,right top,color-stop(0,#150E1A),color-stop(1,#22172A));
+    color:white;
+}
+#type {
+    float:right;
+    color:gray;
+}
+#line > pre {
+    display:inline;
+}
+#cursor {
+    background:white;
+    color:black;
+}

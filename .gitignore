@@ -4,6 +4,7 @@
 !README.md
 !puppeteer.cabal
 !Setup.hs
+!Puppeteer.css
 !src/
 !src/**/
-!src/**.hs
+!src/**/*.hs
