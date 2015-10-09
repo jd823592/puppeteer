@@ -12,15 +12,9 @@ import Graphics.UI.Gtk.WebKit.WebSettings
 import Graphics.UI.Gtk.WebKit.WebView
 
 classify :: String -> [(TokenType, String)]
-classify = unwrap . tokenise . wrap where
-    wrap :: String -> String
-    wrap = (prefix ++)
-
-    unwrap :: [a] -> [a]
-    unwrap = drop (length (tokenise prefix))
-
-    prefix :: String
-    prefix = "x = do "
+classify = map fix . tokenise where
+    fix (Definition, d) = (Varid, d)
+    fix t               = t
 
 render :: [(TokenType, String)] -> String
 render = concat . map renderToken
