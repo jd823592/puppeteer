@@ -1,26 +1,27 @@
-module Buffer (Buffer, mkBuffer, left, right, insert, deleteL, deleteR, toString) where
+module Buffer (Buffer, BufferChange, mkBuffer, left, right, insert, deleteL, deleteR, toString) where
 
 type Buffer = (String, String)
+type BufferChange = Buffer -> Buffer
 
 mkBuffer :: Buffer
 mkBuffer = ([], [' '])
 
-left :: Buffer -> Buffer
+left :: BufferChange
 left (l : ls, rs) = (ls, l : rs)
 left b            = b
 
-right :: Buffer -> Buffer
+right :: BufferChange
 right (ls, r : rs@(_ : _)) = (r : ls, rs)
 right b                    = b
 
-insert :: Char -> Buffer -> Buffer
+insert :: Char -> BufferChange
 insert c (ls, rs) = (c : ls, rs)
 
-deleteL :: Buffer -> Buffer
+deleteL :: BufferChange
 deleteL (_ : ls, rs) = (ls, rs)
 deleteL b            = b
 
-deleteR :: Buffer -> Buffer
+deleteR :: BufferChange
 deleteR (ls, _ : rs@(_ : _)) = (ls, rs)
 deleteR b                    = b
 

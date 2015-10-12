@@ -1,6 +1,9 @@
+import Control.Monad
 import Control.Monad.IO.Class
 import Data.Char
 import Data.Maybe
+
+import Language.Haskell.Interpreter hiding (set, (:=))
 
 import Graphics.UI.Gtk
 import Graphics.UI.Gtk.Gdk.Keys
@@ -17,50 +20,67 @@ import Reactive.Banana.Frameworks
 import Buffer
 import Colour
 
-getLeft :: KeyVal -> Maybe ()
-getLeft 65361 = Just ()
+getLeft :: KeyVal -> Maybe BufferChange
+getLeft 65361 = Just left
 getLeft _     = Nothing
 
-getRight :: KeyVal -> Maybe ()
-getRight 65363 = Just ()
+getRight :: KeyVal -> Maybe BufferChange
+getRight 65363 = Just right
 getRight _     = Nothing
 
-getInsertion :: KeyVal -> Maybe Char
+getInsertion :: KeyVal -> Maybe BufferChange
 getInsertion k = do
     c <- keyToChar k
-    if isPrint c then Just c else Nothing
+    if isPrint c then Just (insert c) else Nothing
 
-getDeleteL :: KeyVal -> Maybe ()
-getDeleteL 65288 = Just ()
+getDeleteL :: KeyVal -> Maybe BufferChange
+getDeleteL 65288 = Just deleteL
 getDeleteL _     = Nothing
 
-getDeleteR :: KeyVal -> Maybe ()
-getDeleteR 65535 = Just ()
+getDeleteR :: KeyVal -> Maybe BufferChange
+getDeleteR 65535 = Just deleteR
 getDeleteR _     = Nothing
 
-display :: MonadIO m => Element -> Buffer -> m ()
---display e = setInnerHTML e . Just . uncurry colour . toString
-display e b = do
-    liftIO . print . uncurry colour . toString $ b
-    setInnerHTML e . Just . uncurry colour . toString $ b
+getConfirm :: KeyVal -> Maybe BufferChange
+getConfirm 65293 = Just (const mkBuffer)
+getConfirm _     = Nothing
 
-networkDesc :: Frameworks t => Window -> Element -> Moment t ()
-networkDesc win bar = do
+displayCode :: Element -> Buffer -> IO ()
+displayCode e = setInnerHTML e . Just . uncurry colour . toString
+
+displayType :: Element -> String -> IO ()
+displayType e b = do
+    runInterpreter $ do
+        setImports [ "Prelude" ]
+        setInnerHTML e . Just <=< typeOf $ b
+    return ()
+
+networkDesc :: Frameworks t => Window -> Element -> Element -> Moment t ()
+networkDesc win l t = do
     addHandler <- liftIO $ do
         (addHandler, fire) <- newAddHandler
-        register addHandler print
         win `on` keyPressEvent $ eventKeyVal >>= liftIO . fire >> return True
         return addHandler
     eKey <- fromAddHandler addHandler
     let
-        eLeft    = const left      <$> filterJust (getLeft      <$> eKey)
-        eRight   = const right     <$> filterJust (getRight     <$> eKey)
-        eInsert  = insert          <$> filterJust (getInsertion <$> eKey)
-        eDeleteL = const deleteL   <$> filterJust (getDeleteL   <$> eKey)
-        eDeleteR = const deleteR   <$> filterJust (getDeleteR   <$> eKey)
-        bBuffer  = accumB mkBuffer  $  unions [ eLeft, eRight, eInsert, eDeleteL, eDeleteR ]
+        eLeft    = filterJust (getLeft      <$> eKey)
+        eRight   = filterJust (getRight     <$> eKey)
+        eInsert  = filterJust (getInsertion <$> eKey)
+        eDeleteL = filterJust (getDeleteL   <$> eKey)
+        eDeleteR = filterJust (getDeleteR   <$> eKey)
+        eConfirm = filterJust (getConfirm   <$> eKey)
+        bBuffer  = accumB mkBuffer $ unions [ eLeft, eRight, eInsert, eDeleteL, eDeleteR, eConfirm ]
+
     eBufferChanges <- changes bBuffer
-    reactimate' $ fmap (display bar) <$> eBufferChanges
+
+    let
+        eBufferContentChanges = fmap (snd . toString) <$> eBufferChanges
+
+    --liftIO $ register addHandler print
+    --reactimate' $ fmap (liftIO . print . uncurry colour . toString) <$> eBufferChanges
+
+    reactimate' $ fmap (displayCode l) <$> eBufferChanges
+    reactimate' $ fmap (displayType t) <$> eBufferContentChanges
 
 main :: IO ()
 main = do
@@ -93,11 +113,12 @@ main = do
     appendChild body (Just t)
     appendChild body (Just l)
 
-    setInnerHTML t $ Just ":: IO ()"
+    displayCode l mkBuffer
+    displayType t ""
 
     set win [ containerChild := bar
             , widgetCanFocus := True
-            --, windowTypeHint := WindowTypeHintDock
+            , windowTypeHint := WindowTypeHintDock
             ]
 
     win `on` deleteEvent $ liftIO mainQuit >> return False
@@ -105,7 +126,7 @@ main = do
     widgetSetSizeRequest win w (-1)
     widgetShowAll win
 
-    net <- compile $ networkDesc win l
+    net <- compile $ networkDesc win l t
     actuate net
 
     mainGUI
