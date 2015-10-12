@@ -1,8 +1,6 @@
 import Control.Monad.IO.Class
 import Data.Maybe
 
-import Language.Haskell.HsColour.Classify
-
 import Graphics.UI.Gtk
 import Graphics.UI.Gtk.WebKit.DOM.Document hiding (drop)
 import Graphics.UI.Gtk.WebKit.DOM.Element hiding (drop)
@@ -13,61 +11,15 @@ import Graphics.UI.Gtk.WebKit.WebView
 import Reactive.Banana
 import Reactive.Banana.Frameworks
 
-colour :: Int -> String -> String
-colour n = concat . render n . classify where
+import Buffer
+import Colour
 
-    classify :: String -> [(TokenType, String)]
-    classify = map fix . tokenise
-
-    fix :: (TokenType, String) -> (TokenType, String)
-    fix (Definition, d) = (Varid, d)
-    fix t               = t
-
-    render :: Int -> [(TokenType, String)] -> [String]
-    render _ []       = []
-    render n ((t, s) : ts) = ("<span class='" ++ tokencls t ++ "'>" ++ renderText n s ++ "</span>") : render (n - length s) ts
-
-    renderText :: Int -> String -> String
-    renderText n s | 0 <= n && n < length s = let (ls, r : rs) = splitAt n s in escape ls ++ "<span id='cursor'>" ++ escape [r] ++ "</span>" ++ escape rs
-                   | otherwise              = s
-
-    tokencls :: TokenType -> String
-    tokencls Keyword    = "hs-keyword"
-    tokencls Keyglyph   = "hs-keyglyph"
-    tokencls Layout     = "hs-layout"
-    tokencls Comment    = "hs-comment"
-    tokencls Conid      = "hs-conid"
-    tokencls Varid      = "hs-varid"
-    tokencls Conop      = "hs-conop"
-    tokencls Varop      = "hs-varop"
-    tokencls String     = "hs-str"
-    tokencls Char       = "hs-chr"
-    tokencls Number     = "hs-num"
-    tokencls Cpp        = "hs-cpp"
-    tokencls Error      = "hs-sel"
-    tokencls Definition = "hs-definition"
-    tokencls _          = ""
-
-    escape :: String -> String
-    escape [] = []
-    escape ('<' : rs) = "&lt;"  ++ escape rs
-    escape ('>' : rs) = "&gt;"  ++ escape rs
-    escape ('&' : rs) = "&amp;" ++ escape rs
-    escape ( c  : rs) = c       :  escape rs
-
-networkDesc :: Frameworks t => Window -> Moment t ()
-networkDesc win = do
+networkDesc :: Frameworks t => Window -> Element -> Moment t ()
+networkDesc win bar = do
     addHandler <- liftIO $ do
         (addHandler, fire) <- newAddHandler
         register addHandler print
-        win `on` keyPressEvent $ do
-            val <- eventKeyVal
-            mod <- eventModifier
-
-            if not (Release `elem` mod)
-            then liftIO (fire val) >> return True
-            else return True
-
+        win `on` keyPressEvent $ eventKeyVal >>= liftIO . fire >> return True
         return addHandler
     eKey <- fromAddHandler addHandler
     reactimate $ fmap (const (return ())) eKey
@@ -116,7 +68,7 @@ main = do
     widgetSetSizeRequest win w (-1)
     widgetShowAll win
 
-    net <- compile $ networkDesc win
+    net <- compile $ networkDesc win l
     actuate net
 
     mainGUI
