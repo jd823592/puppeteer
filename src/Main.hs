@@ -2,8 +2,8 @@ import Control.Monad.IO.Class
 import Data.Maybe
 
 import Graphics.UI.Gtk
-import Graphics.UI.Gtk.WebKit.DOM.Document hiding (drop)
-import Graphics.UI.Gtk.WebKit.DOM.Element hiding (drop)
+import Graphics.UI.Gtk.WebKit.DOM.Document
+import Graphics.UI.Gtk.WebKit.DOM.Element
 import Graphics.UI.Gtk.WebKit.DOM.Node
 import Graphics.UI.Gtk.WebKit.WebSettings
 import Graphics.UI.Gtk.WebKit.WebView
