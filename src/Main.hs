@@ -55,6 +55,23 @@ colour n = concat . render n . classify where
     escape ('&' : rs) = "&amp;" ++ escape rs
     escape ( c  : rs) = c       :  escape rs
 
+networkDesc :: Frameworks t => Window -> Moment t ()
+networkDesc win = do
+    addHandler <- liftIO $ do
+        (addHandler, fire) <- newAddHandler
+        register addHandler print
+        win `on` keyPressEvent $ do
+            val <- eventKeyVal
+            mod <- eventModifier
+
+            if not (Release `elem` mod)
+            then liftIO (fire val) >> return True
+            else return True
+
+        return addHandler
+    eKey <- fromAddHandler addHandler
+    reactimate $ fmap (const (return ())) eKey
+
 main :: IO ()
 main = do
     initGUI
@@ -89,15 +106,17 @@ main = do
     setInnerHTML l $ Just (colour 7 "copy >>= spellcheck >>= paste ")
     setInnerHTML t $ Just ":: IO ()"
 
-    set win [ containerChild      := bar
-            , widgetCanFocus      := True
-            , windowTypeHint      := WindowTypeHintDock
+    set win [ containerChild := bar
+            , widgetCanFocus := True
+            --, windowTypeHint := WindowTypeHintDock
             ]
 
-    win `on` deleteEvent   $ liftIO mainQuit >> return False
-    win `on` keyPressEvent $ liftIO (putStrLn "Key") >> return True
+    win `on` deleteEvent $ liftIO mainQuit >> return False
 
     widgetSetSizeRequest win w (-1)
     widgetShowAll win
+
+    net <- compile $ networkDesc win
+    actuate net
 
     mainGUI
