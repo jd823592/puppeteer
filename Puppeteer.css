@@ -14,6 +14,7 @@ body {
 #line, #type {
     height:14px;
     padding:7px;
+    white-space:pre;
 }
 #line {
     width:100%;

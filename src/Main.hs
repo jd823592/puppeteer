@@ -1,7 +1,9 @@
 import Control.Monad.IO.Class
+import Data.Char
 import Data.Maybe
 
 import Graphics.UI.Gtk
+import Graphics.UI.Gtk.Gdk.Keys
 import Graphics.UI.Gtk.WebKit.DOM.Document
 import Graphics.UI.Gtk.WebKit.DOM.Element
 import Graphics.UI.Gtk.WebKit.DOM.Node
@@ -9,10 +11,38 @@ import Graphics.UI.Gtk.WebKit.WebSettings
 import Graphics.UI.Gtk.WebKit.WebView
 
 import Reactive.Banana
+import Reactive.Banana.Combinators
 import Reactive.Banana.Frameworks
 
 import Buffer
 import Colour
+
+getLeft :: KeyVal -> Maybe ()
+getLeft 65361 = Just ()
+getLeft _     = Nothing
+
+getRight :: KeyVal -> Maybe ()
+getRight 65363 = Just ()
+getRight _     = Nothing
+
+getInsertion :: KeyVal -> Maybe Char
+getInsertion k = do
+    c <- keyToChar k
+    if isPrint c then Just c else Nothing
+
+getDeleteL :: KeyVal -> Maybe ()
+getDeleteL 65288 = Just ()
+getDeleteL _     = Nothing
+
+getDeleteR :: KeyVal -> Maybe ()
+getDeleteR 65535 = Just ()
+getDeleteR _     = Nothing
+
+display :: MonadIO m => Element -> Buffer -> m ()
+--display e = setInnerHTML e . Just . uncurry colour . toString
+display e b = do
+    liftIO . print . uncurry colour . toString $ b
+    setInnerHTML e . Just . uncurry colour . toString $ b
 
 networkDesc :: Frameworks t => Window -> Element -> Moment t ()
 networkDesc win bar = do
@@ -22,7 +52,15 @@ networkDesc win bar = do
         win `on` keyPressEvent $ eventKeyVal >>= liftIO . fire >> return True
         return addHandler
     eKey <- fromAddHandler addHandler
-    reactimate $ fmap (const (return ())) eKey
+    let
+        eLeft    = const left      <$> filterJust (getLeft      <$> eKey)
+        eRight   = const right     <$> filterJust (getRight     <$> eKey)
+        eInsert  = insert          <$> filterJust (getInsertion <$> eKey)
+        eDeleteL = const deleteL   <$> filterJust (getDeleteL   <$> eKey)
+        eDeleteR = const deleteR   <$> filterJust (getDeleteR   <$> eKey)
+        bBuffer  = accumB mkBuffer  $  unions [ eLeft, eRight, eInsert, eDeleteL, eDeleteR ]
+    eBufferChanges <- changes bBuffer
+    reactimate' $ fmap (display bar) <$> eBufferChanges
 
 main :: IO ()
 main = do
@@ -55,7 +93,6 @@ main = do
     appendChild body (Just t)
     appendChild body (Just l)
 
-    setInnerHTML l $ Just (colour 7 "copy >>= spellcheck >>= paste ")
     setInnerHTML t $ Just ":: IO ()"
 
     set win [ containerChild := bar

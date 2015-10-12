@@ -1,9 +1,9 @@
-module Buffer (Buffer, empty, left, right, insert, backspace, delete, toString) where
+module Buffer (Buffer, mkBuffer, left, right, insert, deleteL, deleteR, toString) where
 
 type Buffer = (String, String)
 
-empty :: Buffer
-empty = ([], [' '])
+mkBuffer :: Buffer
+mkBuffer = ([], [' '])
 
 left :: Buffer -> Buffer
 left (l : ls, rs) = (ls, l : rs)
@@ -16,13 +16,13 @@ right b                    = b
 insert :: Char -> Buffer -> Buffer
 insert c (ls, rs) = (c : ls, rs)
 
-backspace :: Buffer -> Buffer
-backspace (l : ls, rs) = (ls, rs)
-backspace b            = b
+deleteL :: Buffer -> Buffer
+deleteL (_ : ls, rs) = (ls, rs)
+deleteL b            = b
 
-delete :: Buffer -> Buffer
-delete (ls, _ : rs) = (ls, rs)
-delete b            = b
+deleteR :: Buffer -> Buffer
+deleteR (ls, _ : rs@(_ : _)) = (ls, rs)
+deleteR b                    = b
 
-toString :: Buffer -> (String, Int)
-toString (ls, rs) = (reverse ls ++ rs, length ls)
+toString :: Buffer -> (Int, String)
+toString (ls, rs) = (length ls, reverse ls ++ rs)

@@ -21,6 +21,7 @@ renderText n s | 0 <= n && n < length s = let (ls, r : rs) = splitAt n s in esca
                | otherwise              = s
 
 tokencls :: TokenType -> String
+tokencls Space      = "hs-space"
 tokencls Keyword    = "hs-keyword"
 tokencls Keyglyph   = "hs-keyglyph"
 tokencls Layout     = "hs-layout"
@@ -35,7 +36,6 @@ tokencls Number     = "hs-num"
 tokencls Cpp        = "hs-cpp"
 tokencls Error      = "hs-sel"
 tokencls Definition = "hs-definition"
-tokencls _          = ""
 
 escape :: String -> String
 escape [] = []
