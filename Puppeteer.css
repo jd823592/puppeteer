@@ -32,6 +32,6 @@ body {
     background:white;
     color:black;
 }
-.hs-varop {
+.hs-keyword, .hs-varop {
     color:yellow;
 }

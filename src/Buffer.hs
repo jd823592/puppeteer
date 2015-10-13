@@ -1,10 +1,16 @@
-module Buffer (Buffer, BufferChange, mkBuffer, left, right, insert, deleteL, deleteR, toString) where
+module Buffer (Buffer, BufferChange, mkBuffer, start, end, left, right, insert, deleteL, deleteR, toString) where
 
 type Buffer = (String, String)
 type BufferChange = Buffer -> Buffer
 
 mkBuffer :: Buffer
 mkBuffer = ([], [' '])
+
+start :: BufferChange
+start (ls, rs) = ([], reverse ls ++ rs)
+
+end :: BufferChange
+end (ls, rs) = let (r : rs') = reverse rs in (rs' ++ ls, [r])
 
 left :: BufferChange
 left (l : ls, rs) = (ls, l : rs)

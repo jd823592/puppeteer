@@ -20,30 +20,17 @@ import Reactive.Banana.Frameworks
 import Buffer
 import Colour
 
-getLeft :: KeyVal -> Maybe BufferChange
-getLeft 65361 = Just left
-getLeft _     = Nothing
-
-getRight :: KeyVal -> Maybe BufferChange
-getRight 65363 = Just right
-getRight _     = Nothing
-
-getInsertion :: KeyVal -> Maybe BufferChange
-getInsertion k = do
+getKeyAction :: KeyVal -> Maybe BufferChange
+getKeyAction 65288 = Just deleteL
+getKeyAction 65293 = Just (const mkBuffer)
+getKeyAction 65360 = Just start
+getKeyAction 65361 = Just left
+getKeyAction 65363 = Just right
+getKeyAction 65367 = Just end
+getKeyAction 65535 = Just deleteR
+getKeyAction k = do
     c <- keyToChar k
     if isPrint c then Just (insert c) else Nothing
-
-getDeleteL :: KeyVal -> Maybe BufferChange
-getDeleteL 65288 = Just deleteL
-getDeleteL _     = Nothing
-
-getDeleteR :: KeyVal -> Maybe BufferChange
-getDeleteR 65535 = Just deleteR
-getDeleteR _     = Nothing
-
-getConfirm :: KeyVal -> Maybe BufferChange
-getConfirm 65293 = Just (const mkBuffer)
-getConfirm _     = Nothing
 
 displayCode :: Element -> Buffer -> IO ()
 displayCode e = setInnerHTML e . Just . uncurry colour . toString
@@ -62,16 +49,7 @@ networkDesc win l t = do
         win `on` keyPressEvent $ eventKeyVal >>= liftIO . fire >> return True
         return addHandler
     eKey <- fromAddHandler addHandler
-    let
-        eLeft    = filterJust (getLeft      <$> eKey)
-        eRight   = filterJust (getRight     <$> eKey)
-        eInsert  = filterJust (getInsertion <$> eKey)
-        eDeleteL = filterJust (getDeleteL   <$> eKey)
-        eDeleteR = filterJust (getDeleteR   <$> eKey)
-        eConfirm = filterJust (getConfirm   <$> eKey)
-        bBuffer  = accumB mkBuffer $ unions [ eLeft, eRight, eInsert, eDeleteL, eDeleteR, eConfirm ]
-
-    eBufferChanges <- changes bBuffer
+    eBufferChanges <- changes $ accumB mkBuffer (filterJust $ getKeyAction <$> eKey)
 
     let
         eBufferContentChanges = fmap (snd . toString) <$> eBufferChanges
