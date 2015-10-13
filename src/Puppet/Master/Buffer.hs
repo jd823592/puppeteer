@@ -1,4 +1,15 @@
-module Buffer (Buffer, BufferChange, mkBuffer, start, end, left, right, insert, deleteL, deleteR, toString) where
+module Puppet.Master.Buffer ( Buffer
+                            , BufferChange
+                            , mkBuffer
+                            , start
+                            , end
+                            , left
+                            , right
+                            , insert
+                            , deleteL
+                            , deleteR
+                            , toString
+                            ) where
 
 type Buffer = (String, String)
 type BufferChange = Buffer -> Buffer

@@ -1,4 +1,4 @@
-module Colour (colour) where
+module Puppet.Master.Colour (colour) where
 
 import Language.Haskell.HsColour.Classify
 

@@ -1,3 +1,5 @@
+module Main (main) where
+
 import Control.Monad
 import Control.Monad.IO.Class
 import Data.Char
@@ -17,8 +19,8 @@ import Reactive.Banana
 import Reactive.Banana.Combinators
 import Reactive.Banana.Frameworks
 
-import Buffer
-import Colour
+import Puppet.Master.Buffer
+import Puppet.Master.Colour
 
 getKeyAction :: KeyVal -> Maybe BufferChange
 getKeyAction 65288 = Just deleteL
