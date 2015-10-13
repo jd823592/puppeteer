@@ -68,7 +68,11 @@ main = do
     bar <- webViewNew
     scr <- windowGetScreen win
 
-    w <- screenGetWidth scr
+    --root <- screenGetRootWindow scr
+    --mon  <- screenGetMonitorAtWindow scr root
+
+    --(Rectangle x y w h)  <- screenGetMonitorGeometry scr mon
+    (Rectangle x y w h)  <- screenGetMonitorGeometry scr 0
 
     settings <- webViewGetWebSettings bar
 
@@ -100,6 +104,10 @@ main = do
             ]
 
     win `on` deleteEvent $ liftIO mainQuit >> return False
+
+    bh <- fmap floor $ getOffsetHeight l
+
+    windowMove win x (y + h - bh)
 
     widgetSetSizeRequest win w (-1)
     widgetShowAll win
