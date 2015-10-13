@@ -70,11 +70,10 @@ main = do
     bar <- webViewNew
     scr <- windowGetScreen win
 
-    --root <- screenGetRootWindow scr
-    --mon  <- screenGetMonitorAtWindow scr root
+    root <- screenGetRootWindow scr
+    mon  <- screenGetMonitorAtWindow scr root
 
-    --(Rectangle x y w h)  <- screenGetMonitorGeometry scr mon
-    (Rectangle x y w h)  <- screenGetMonitorGeometry scr 0
+    (Rectangle x y w h)  <- screenGetMonitorGeometry scr mon
 
     settings <- webViewGetWebSettings bar
 
