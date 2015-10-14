@@ -99,9 +99,10 @@ main = do
     displayCode l mkBuffer
     displayType t ""
 
-    set win [ containerChild := bar
-            , widgetCanFocus := True
-            , windowTypeHint := WindowTypeHintDock
+    set win [ containerChild  := bar
+            , widgetCanFocus  := True
+            , windowTypeHint  := WindowTypeHintDock
+            , windowDecorated := False
             ]
 
     win `on` deleteEvent $ liftIO mainQuit >> return False
