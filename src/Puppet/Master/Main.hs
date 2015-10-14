@@ -24,7 +24,6 @@ import Puppet.Master.Colour
 
 getKeyAction :: KeyVal -> Maybe BufferChange
 getKeyAction 65288 = Just deleteL
-getKeyAction 65293 = Just (const mkBuffer)
 getKeyAction 65360 = Just start
 getKeyAction 65361 = Just left
 getKeyAction 65363 = Just right
@@ -34,15 +33,21 @@ getKeyAction k = do
     c <- keyToChar k
     if isPrint c then Just (insert c) else Nothing
 
-displayCode :: Element -> Buffer -> IO ()
-displayCode e = setInnerHTML e . Just . uncurry colour . toString
+getConfirm :: KeyVal -> Maybe BufferChange
+getConfirm 65293 = Just (const mkBuffer)
+getConfirm _     = Nothing
 
-displayType :: Element -> String -> IO ()
-displayType e b = do
+displayBuffer :: Element -> Element -> Buffer -> IO ()
+displayBuffer l t b = do
+    setInnerHTML l . Just . uncurry colour . toString $ b
+
     runInterpreter $ do
         setImports [ "Prelude" ]
-        setInnerHTML e . Just <=< typeOf $ b
+        setInnerHTML t . Just <=< typeOf . snd . toString $ b
     return ()
+
+evalBuffer :: Buffer -> IO ()
+evalBuffer b = putStrLn $ "eval: " ++ show (toString b)
 
 networkDesc :: Frameworks t => Window -> Element -> Element -> Moment t ()
 networkDesc win l t = do
@@ -51,16 +56,17 @@ networkDesc win l t = do
         win `on` keyPressEvent $ eventKeyVal >>= liftIO . fire >> return True
         return addHandler
     eKey <- fromAddHandler addHandler
-    eBufferChanges <- changes $ accumB mkBuffer (filterJust $ getKeyAction <$> eKey)
 
     let
-        eBufferContentChanges = fmap (snd . toString) <$> eBufferChanges
+        eBuffer  = filterJust $ getKeyAction <$> eKey
+        eConfirm = filterJust $ getConfirm   <$> eKey
+        bBuffer  = accumB mkBuffer $ unions [ eBuffer, eConfirm ]
+        eEval    = bBuffer <@ eConfirm
 
-    --liftIO $ register addHandler print
-    --reactimate' $ fmap (liftIO . print . uncurry colour . toString) <$> eBufferChanges
+    eBufferChanges <- changes bBuffer
 
-    reactimate' $ fmap (displayCode l) <$> eBufferChanges
-    reactimate' $ fmap (displayType t) <$> eBufferContentChanges
+    reactimate  $          evalBuffer      <$> eEval
+    reactimate' $ fmap (displayBuffer l t) <$> eBufferChanges
 
 main :: IO ()
 main = do
@@ -96,8 +102,7 @@ main = do
     appendChild body (Just t)
     appendChild body (Just l)
 
-    displayCode l mkBuffer
-    displayType t ""
+    displayBuffer l t mkBuffer
 
     set win [ containerChild  := bar
             , widgetCanFocus  := True
