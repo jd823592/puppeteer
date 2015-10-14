@@ -21,6 +21,7 @@ import Reactive.Banana.Frameworks
 
 import Puppet.Master.Buffer
 import Puppet.Master.Colour
+import Puppet.Master.Worker
 
 getKeyAction :: KeyVal -> Maybe BufferChange
 getKeyAction 65288 = Just deleteL
@@ -37,20 +38,24 @@ getConfirm :: KeyVal -> Maybe BufferChange
 getConfirm 65293 = Just (const mkBuffer)
 getConfirm _     = Nothing
 
-displayBuffer :: Element -> Element -> Buffer -> IO ()
-displayBuffer l t b = do
+displayBuffer :: Worker Interpreter -> Element -> Element -> Buffer -> IO ()
+displayBuffer w l t b = do
     setInnerHTML l . Just . uncurry colour . toString $ b
 
-    runInterpreter $ do
-        setImports [ "Prelude" ]
-        setInnerHTML t . Just <=< typeOf . snd . toString $ b
+    --ask w $ setInnerHTML t . Just <=< typeOf . snd . toString $ b
+
     return ()
 
-evalBuffer :: Buffer -> IO ()
-evalBuffer b = putStrLn $ "eval: " ++ show (toString b)
+evalBuffer :: Worker Interpreter -> Buffer -> IO ()
+evalBuffer w b = do
+    r <- ask w $ eval . snd . toString $ b
 
-networkDesc :: Frameworks t => Window -> Element -> Element -> Moment t ()
-networkDesc win l t = do
+    putStrLn $ show r
+
+    return ()
+
+networkDesc :: Frameworks t => Window -> Worker Interpreter -> Element -> Element -> Moment t ()
+networkDesc win w l t = do
     addHandler <- liftIO $ do
         (addHandler, fire) <- newAddHandler
         win `on` keyPressEvent $ eventKeyVal >>= liftIO . fire >> return True
@@ -65,11 +70,13 @@ networkDesc win l t = do
 
     eBufferChanges <- changes bBuffer
 
-    reactimate  $          evalBuffer      <$> eEval
-    reactimate' $ fmap (displayBuffer l t) <$> eBufferChanges
+    reactimate  $          evalBuffer w      <$> eEval
+    reactimate' $ fmap (displayBuffer w l t) <$> eBufferChanges
 
 main :: IO ()
 main = do
+    work <- newWorker $ runInterpreter . (setImports [ "Prelude" ] >>) >=> print
+
     initGUI
 
     win <- windowNew
@@ -102,7 +109,7 @@ main = do
     appendChild body (Just t)
     appendChild body (Just l)
 
-    displayBuffer l t mkBuffer
+    displayBuffer work l t mkBuffer
 
     set win [ containerChild  := bar
             , widgetCanFocus  := True
@@ -119,7 +126,7 @@ main = do
     widgetSetSizeRequest win w (-1)
     widgetShowAll win
 
-    net <- compile $ networkDesc win l t
+    net <- compile $ networkDesc win work l t
     actuate net
 
     mainGUI

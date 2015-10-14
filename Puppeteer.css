@@ -35,3 +35,6 @@ body {
 .hs-keyword, .hs-varop {
     color:yellow;
 }
+.hs-str, .hs-chr, .hs-num {
+    color:magenta;
+}
