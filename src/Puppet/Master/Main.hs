@@ -40,7 +40,7 @@ displayBuffer :: InterpreterWorker -> Element -> Element -> Buffer -> IO ()
 displayBuffer w l t b = do
     setInnerHTML l . Just . uncurry colour . toString $ b
 
-    --ask w $ setInnerHTML t . Just <=< typeOf . snd . toString $ b
+    ask w $ setInnerHTML t . Just <=< typeOf . snd . toString $ b
 
     return ()
 
