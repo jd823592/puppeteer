@@ -27,7 +27,7 @@ eval e = attempt >>= return . either (const  "error") (showSDocUnsafe . ppr) whe
     result _          = return []
 
 typeOf :: String -> Ghc String
-typeOf e = attempt >>= return . either (const "no type") (showSDocUnsafe . ppr) where
+typeOf e = attempt >>= return . either (const "") (showSDocUnsafe . ppr) where
     attempt :: Ghc (Either SomeException Type)
     attempt = gtry $ exprType e
 
