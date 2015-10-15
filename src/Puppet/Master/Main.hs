@@ -5,8 +5,6 @@ import Control.Monad.IO.Class
 import Data.Char
 import Data.Maybe
 
-import Language.Haskell.Interpreter hiding (set, (:=))
-
 import Graphics.UI.Gtk
 import Graphics.UI.Gtk.Gdk.Keys
 import Graphics.UI.Gtk.WebKit.DOM.Document
@@ -21,7 +19,7 @@ import Reactive.Banana.Frameworks
 
 import Puppet.Master.Buffer
 import Puppet.Master.Colour
-import Puppet.Master.Worker
+import Puppet.Master.Interpreter
 
 getKeyAction :: KeyVal -> Maybe BufferChange
 getKeyAction 65288 = Just deleteL
@@ -38,7 +36,7 @@ getConfirm :: KeyVal -> Maybe BufferChange
 getConfirm 65293 = Just (const mkBuffer)
 getConfirm _     = Nothing
 
-displayBuffer :: Worker Interpreter -> Element -> Element -> Buffer -> IO ()
+displayBuffer :: InterpreterWorker -> Element -> Element -> Buffer -> IO ()
 displayBuffer w l t b = do
     setInnerHTML l . Just . uncurry colour . toString $ b
 
@@ -46,7 +44,7 @@ displayBuffer w l t b = do
 
     return ()
 
-evalBuffer :: Worker Interpreter -> Buffer -> IO ()
+evalBuffer :: InterpreterWorker -> Buffer -> IO ()
 evalBuffer w b = do
     r <- ask w $ eval . snd . toString $ b
 
@@ -54,7 +52,7 @@ evalBuffer w b = do
 
     return ()
 
-networkDesc :: Frameworks t => Window -> Worker Interpreter -> Element -> Element -> Moment t ()
+networkDesc :: Frameworks t => Window -> InterpreterWorker -> Element -> Element -> Moment t ()
 networkDesc win w l t = do
     addHandler <- liftIO $ do
         (addHandler, fire) <- newAddHandler
@@ -75,7 +73,7 @@ networkDesc win w l t = do
 
 main :: IO ()
 main = do
-    work <- newWorker $ runInterpreter . (setImports [ "Prelude" ] >>) >=> print
+    int <- newInterpreterWorker
 
     initGUI
 
@@ -109,7 +107,7 @@ main = do
     appendChild body (Just t)
     appendChild body (Just l)
 
-    displayBuffer work l t mkBuffer
+    displayBuffer int l t mkBuffer
 
     set win [ containerChild  := bar
             , widgetCanFocus  := True
@@ -126,7 +124,7 @@ main = do
     widgetSetSizeRequest win w (-1)
     widgetShowAll win
 
-    net <- compile $ networkDesc win work l t
+    net <- compile $ networkDesc win int l t
     actuate net
 
     mainGUI
