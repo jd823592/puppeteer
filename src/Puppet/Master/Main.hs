@@ -45,14 +45,9 @@ displayBuffer w l t b = do
     return ()
 
 evalBuffer :: InterpreterWorker -> Buffer -> IO ()
-evalBuffer w b = do
-    r <- ask w $ eval . snd . toString $ b
+evalBuffer w b = void $ print <=< ask w . eval . snd . toString $ b
 
-    putStrLn $ show r
-
-    return ()
-
-networkDesc :: Frameworks t => Window -> InterpreterWorker -> Element -> Element -> Moment t ()
+networkDesc :: Window -> InterpreterWorker -> Element -> Element -> MomentIO ()
 networkDesc win w l t = do
     addHandler <- liftIO $ do
         (addHandler, fire) <- newAddHandler
@@ -60,11 +55,12 @@ networkDesc win w l t = do
         return addHandler
     eKey <- fromAddHandler addHandler
 
-    let
-        eBuffer  = filterJust $ getKeyAction <$> eKey
+    let eBuffer  = filterJust $ getKeyAction <$> eKey
         eConfirm = filterJust $ getConfirm   <$> eKey
-        bBuffer  = accumB mkBuffer $ unions [ eBuffer, eConfirm ]
-        eEval    = bBuffer <@ eConfirm
+
+    bBuffer <- accumB mkBuffer $ unions [ eBuffer, eConfirm ]
+
+    let eEval = bBuffer <@ eConfirm :: Event Buffer
 
     eBufferChanges <- changes bBuffer
 
@@ -84,20 +80,20 @@ main = do
     root <- screenGetRootWindow scr
     mon  <- screenGetMonitorAtWindow scr root
 
-    (Rectangle x y w h)  <- screenGetMonitorGeometry scr mon
+    Rectangle x y w h <- screenGetMonitorGeometry scr mon
 
     settings <- webViewGetWebSettings bar
 
     set settings [ webSettingsUserStylesheetUri := Just "file:///home/jakub/puppeteer/Puppeteer.css" ]
 
-    (Just doc)  <- webViewGetDomDocument bar
-    (Just body) <- getBody doc
+    Just doc  <- webViewGetDomDocument bar
+    Just body <- getBody doc
 
     setAttribute body "style" ("width:" ++ show w ++ "px;")
 
-    (Just p) <- createElement doc $ Just "div"
-    (Just t) <- createElement doc $ Just "div"
-    (Just l) <- createElement doc $ Just "div"
+    Just p <- createElement doc $ Just "div"
+    Just t <- createElement doc $ Just "div"
+    Just l <- createElement doc $ Just "div"
 
     setAttribute p "id" "prompt"
     setAttribute t "id" "type"
@@ -111,13 +107,13 @@ main = do
 
     set win [ containerChild  := bar
             , widgetCanFocus  := True
-            , windowTypeHint  := WindowTypeHintDock
+            --, windowTypeHint  := WindowTypeHintDock
             , windowDecorated := False
             ]
 
     win `on` deleteEvent $ liftIO mainQuit >> return False
 
-    bh <- fmap floor $ getOffsetHeight l
+    bh <- floor <$> getOffsetHeight l
 
     windowMove win x (y + h - bh)
 

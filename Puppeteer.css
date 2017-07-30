@@ -5,11 +5,27 @@ body {
     margin:0;
     font:14px monospace;
 }
-#prompt {
-    height:28px;
+#prompt::before {
     width:32px;
+    height:14px;
+    padding:7px 0;
+    position:absolute;
+    left:0;
+    top:0;
+    content:"\03bb";
+    background:#BA2B1A;
+    color:white;
+    font:bold 14px monospace;
+    text-align: center;
+}
+#prompt {
+    width:0;
+    height:0;
     float:left;
-    background:2px/24px url('https://www.haskell.org/static/img/logo.png') no-repeat;
+    margin:0 8px 0 32px;
+    border-top:14px solid transparent;
+    border-bottom:14px solid transparent;
+    border-left:16px solid #BA2B1A;
 }
 #line, #type {
     height:14px;
@@ -18,15 +34,12 @@ body {
 }
 #line {
     width:100%;
-    background:-webkit-gradient(linear,left top,right top,color-stop(0,#150E1A),color-stop(1,#22172A));
+    background:-webkit-gradient(linear,left top,right top,color-stop(0,#000000),color-stop(0.4,#222222));
     color:white;
 }
 #type {
     float:right;
     color:gray;
-}
-#line > pre {
-    display:inline;
 }
 #cursor {
     background:white;

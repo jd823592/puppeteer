@@ -10,6 +10,7 @@ import Control.Monad
 
 import GHC
 import GHC.Paths ( libdir )
+import GHCi
 import GhcMonad
 import Outputable
 
@@ -18,16 +19,16 @@ import Puppet.Master.Worker
 type InterpreterWorker = Worker Ghc
 
 eval :: String -> Ghc String
-eval e = attempt >>= return . either (const  "error") (showSDocUnsafe . ppr) where
+eval e = liftM (either (const  "error") (showSDocUnsafe . ppr)) attempt where
     attempt :: Ghc (Either SomeException [Name])
-    attempt = gtry $ runStmt e RunToCompletion >>= result
+    attempt = gtry $ execStmt e (ExecOptions RunToCompletion "prompr" 0 EvalThis) >>= result
 
-    result :: RunResult -> Ghc [Name]
-    result (RunOk ns) = return ns
-    result _          = return []
+    result :: ExecResult -> Ghc [Name]
+    result (ExecComplete (Right ns) _) = return ns
+    result _                           = return []
 
 typeOf :: String -> Ghc String
-typeOf e = attempt >>= return . either (const "") (showSDocUnsafe . ppr) where
+typeOf e = liftM (either (const "") (showSDocUnsafe . ppr)) attempt where
     attempt :: Ghc (Either SomeException Type)
     attempt = gtry $ exprType e
 

@@ -16,6 +16,5 @@ newWorker unlift = do
 ask :: MonadIO m => Worker m -> m a -> IO a
 ask w a = do
     ref <- newEmptyMVar
-    writeChan (requests w) $ do
-        liftIO . putMVar ref =<< a
+    writeChan (requests w) $ liftIO . putMVar ref =<< a
     takeMVar ref

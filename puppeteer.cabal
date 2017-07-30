@@ -18,7 +18,13 @@ cabal-version:       >=1.10
 executable puppeteer
   main-is:             Puppet/Master/Main.hs
   other-modules:       Puppet.Master.Buffer, Puppet.Master.Colour, Puppet.Master.Interpreter, Puppet.Master.Worker
-  -- other-extensions:    
-  build-depends:       base >=4.8 && <4.9, transformers >=0.4 && <0.5, reactive-banana >=0.9 && <1.0, gtk3 >=0.13 && <0.14, webkitgtk3 >=0.14 && <0.15, hscolour >=1.23 && <1.24, ghc >=7.10 && <7.11, ghc-paths >=0.1 && <0.2
+  build-depends:       base >=4.9 && <5,
+                       transformers >=0.5 && <0.6,
+                       reactive-banana >=1.1 && <1.2,
+                       gtk3 >=0.14 && <0.15,
+                       webkitgtk3 >=0.14 && <0.15,
+                       hscolour >=1.23 && <1.24,
+                       ghc >=8.0.1 && <8.1,
+                       ghc-paths >=0.1 && <0.2
   hs-source-dirs:      src
   default-language:    Haskell2010
