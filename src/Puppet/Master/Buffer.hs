@@ -38,15 +38,13 @@ right :: BufferChange
 right = tug rightward
 
 up :: BufferChange
-up = tug leftward
-   . rightmost
+up = rightmost
    . fromWithin traverse
    . tug rightward
    . upward
 
 down :: BufferChange
-down = tug leftward
-     . rightmost
+down = rightmost
      . fromWithin traverse
      . tug leftward
      . upward
@@ -57,6 +55,7 @@ remember = fromWithin traverse
          . zipper
          . (" " :)
          . rezip
+         . bringUp
 
 bringUp :: BufferChange
 bringUp b = let i   = b  & tooth
