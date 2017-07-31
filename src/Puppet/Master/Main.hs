@@ -25,7 +25,9 @@ getKeyAction :: KeyVal -> Maybe BufferChange
 getKeyAction 65288 = Just deleteL
 getKeyAction 65360 = Just start
 getKeyAction 65361 = Just left
+getKeyAction 65362 = Just up
 getKeyAction 65363 = Just right
+getKeyAction 65364 = Just down
 getKeyAction 65367 = Just end
 getKeyAction 65535 = Just deleteR
 getKeyAction k = do
@@ -33,7 +35,7 @@ getKeyAction k = do
     if isPrint c then Just (insert c) else Nothing
 
 getConfirm :: KeyVal -> Maybe BufferChange
-getConfirm 65293 = Just (const mkBuffer)
+getConfirm 65293 = Just remember
 getConfirm _     = Nothing
 
 displayBuffer :: InterpreterWorker -> Element -> Element -> Buffer -> IO ()
